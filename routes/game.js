@@ -16,7 +16,7 @@ function generateCountryDescription() {
             {
                 parts: [
                     {
-                        text: `Descreva o país ${randomCountry.nome_pais}, abordando pontos interessantes sobre cultura, particularidades, historia, e outras coisas, seja breve porém que seja possivel saber, é para um jogo de perguntas, você não pode dizer o país, máximo de 200 caracteres`,
+                        text: `Descreva o país ${randomCountry.nome}, abordando pontos interessantes sobre cultura, particularidades, historia, uma pessoa influente, e outras coisas, seja breve porém que seja possivel saber, é para um jogo de perguntas, você não pode dizer o país, máximo e mínimo de 500 caracteres`,
                     },
                 ],
             },
@@ -38,9 +38,9 @@ function generateCountryDescription() {
             const description = response.data.candidates[0].content.parts[0].text;
 
             const countryNew = {
-                nome_pais: randomCountry.nome_pais,
+                nome_pais: randomCountry.nome,
                 description: description,
-                code: randomCountry.sigla
+                code: randomCountry.codigo
             };
 
             Country.findOneAndUpdate(
@@ -68,13 +68,19 @@ router.get("/find-country/:country", async (req, res) => {
         const country = await Country.findOne({
             nome_pais: { $regex: new RegExp(`^${countryName}$`, "i") }
         });
-        const sigla = countries.find(c => c.nome_pais.toLowerCase() === countryName.toLowerCase());
+        const sigla = countries.find(c => c.nome === countryName);
 
-        if (!country) {
-            return res.send({ country: countryName, guessedRight: false, code: sigla ? sigla.sigla : null });
+
+        if (!sigla){
+            return res.status(500).send({ message: "Não conheço esse país, lembre-se de escrever corretamente com os acentos" });
         }
 
-        res.send({ country: country.nome_pais, guessedRight: true, code: sigla.sigla });
+
+        if (!country) {
+            return res.send({ country: countryName, guessedRight: false, code: sigla ? sigla.codigo : null });
+        }
+
+        res.send({ country: country.nome_pais, guessedRight: true, code: sigla.codigo });
     } catch (err) {
         console.error("Error finding country:", err);
         res.status(500).send({ message: "Não conheço esse país, lembre-se de escrever corretamente com os acentos" });
